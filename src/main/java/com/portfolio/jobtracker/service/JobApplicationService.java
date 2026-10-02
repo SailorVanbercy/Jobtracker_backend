@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.portfolio.jobtracker.dto.JobApplicationRequest;
 import com.portfolio.jobtracker.dto.JobApplicationResponse;
 import com.portfolio.jobtracker.entity.JobApplication;
+import com.portfolio.jobtracker.exception.RessourceNotFoundException;
 import com.portfolio.jobtracker.repository.JobApplicationRepository;
 
 @Service 
@@ -42,13 +43,13 @@ public class JobApplicationService {
     // Méthode pour récupérer une candidature par son ID
     public JobApplicationResponse getApplicationById(UUID id){
         JobApplication entity = jobApplicationRepository.findById(id)
-        .orElseThrow(() ->new RuntimeException("Application not found with id: " + id));
+        .orElseThrow(() ->new RessourceNotFoundException("Application not found with id: " + id));
         return JobApplicationResponse.fromEntity(entity);
     }
 
     public JobApplicationResponse updateApplication(UUID id, JobApplicationRequest request){
         JobApplication entity = jobApplicationRepository.findById(id).orElseThrow(
-            () -> new RuntimeException("Application not found with id: " + id)
+            () -> new RessourceNotFoundException("Application not found with id: " + id)
         );
 
         // Mise à jour des champs de l'entité avec les valeurs du DTO
@@ -70,7 +71,7 @@ public class JobApplicationService {
     // Méthode pour supprimer une candidature par son ID
     public void deleteApplication(UUID id){
         if(!jobApplicationRepository.existsById(id))
-            throw new RuntimeException("Application not found with id: " + id);
+            throw new RessourceNotFoundException("Application not found with id: " + id);
         jobApplicationRepository.deleteById(id);
     }
 }
