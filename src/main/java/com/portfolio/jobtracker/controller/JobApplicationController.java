@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.portfolio.jobtracker.dto.JobApplicationRequest;
 import com.portfolio.jobtracker.dto.JobApplicationResponse;
-import com.portfolio.jobtracker.service.AiAnalysisService;
 import com.portfolio.jobtracker.service.JobApplicationService;
 
 import jakarta.validation.Valid;
@@ -25,12 +24,12 @@ import jakarta.validation.Valid;
 @CrossOrigin (origins = "*")
 public class JobApplicationController {
     private final JobApplicationService service;
-    private final AiAnalysisService aiAnalysisService;
+
 
     //Injection de dépendance via le constructeur
-    public JobApplicationController(JobApplicationService service, AiAnalysisService aiAnalysisService){
+    public JobApplicationController(JobApplicationService service){
         this.service = service;
-        this.aiAnalysisService = aiAnalysisService;
+
     }
 
     //Endpoint de récupération de toutes les candidatures

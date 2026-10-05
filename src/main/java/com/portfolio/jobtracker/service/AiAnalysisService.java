@@ -8,14 +8,7 @@ import com.portfolio.jobtracker.dto.AiAnalysisResponse;
 @Service 
 public class AiAnalysisService {
     ChatClient chatClient;
-
-    // Ton CV codé en dur pour l'instant (nous pourrons le stocker en base ou dans un fichier plus tard)
-    private final String myResume = """
-        Développeur Full-Stack avec de l'expérience en Java, Spring Boot, React, Next.js.
-        Bases de données : PostgreSQL, MySQL.
-        Outils : Git, Docker, GitHub Actions, AWS.
-        """;
-
+    
     public AiAnalysisService(ChatClient.Builder chatClientBuilder) {
         this.chatClient = chatClientBuilder.build();
     }

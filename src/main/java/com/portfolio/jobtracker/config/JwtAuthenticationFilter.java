@@ -14,6 +14,7 @@ import com.portfolio.jobtracker.service.JwtService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
@@ -32,17 +33,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
             throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String userEmail;
+        String jwt = null;
+        String userEmail = null;
 
-        // Si pas de token, on passe au filtre suivant
-        if(authHeader == null || !authHeader.startsWith("Bearer ")){
+        // Chercher le token dans les headers
+        if(authHeader != null && authHeader.startsWith("Bearer ")){
+            jwt = authHeader.substring(7);
+        } else {
+            // si pas de header, chercher dans les cookies
+            if(request.getCookies() != null){
+                for(Cookie cookie : request.getCookies()){
+                    if("jwt_token".equals(cookie.getName())){
+                        jwt = cookie.getValue();
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Si on a pas trouvé token -> on passe
+        if(jwt == null){
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 2. Extraction du token et de l'email
-        jwt = authHeader.substring(7);
         userEmail = jwtService.extractUsername(jwt);
 
         //3. Si on a un email et que l'utilisateur n'est pas encore authentifié
