@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.portfolio.jobtracker.dto.AiAnalysisResponse;
 import com.portfolio.jobtracker.dto.JobApplicationRequest;
 import com.portfolio.jobtracker.dto.JobApplicationResponse;
 import com.portfolio.jobtracker.service.AiAnalysisService;
@@ -62,11 +61,5 @@ public class JobApplicationController {
     @DeleteMapping ("/{id}")
     public void deleteApplication(@PathVariable UUID id){
         service.deleteApplication(id);
-    }
-
-    // Endpoint pour analyser une description de poste par l'IA
-    @PostMapping ("/analyze")
-    public AiAnalysisResponse analyzeJob(@RequestBody String jobDescription){
-        return aiAnalysisService.analyseJobDescription(jobDescription);
     }
 }

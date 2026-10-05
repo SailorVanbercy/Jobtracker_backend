@@ -20,7 +20,7 @@ public class AiAnalysisService {
         this.chatClient = chatClientBuilder.build();
     }
 
-    public AiAnalysisResponse analyseJobDescription(String jobDescription ){
+    public AiAnalysisResponse analyseJobDescription(String jobDescription, String userResume ){
         String prompt = """
                 Tu es un Tech Lead et recruteur expert. 
             Compare le CV suivant avec la description de l'offre d'emploi.
@@ -33,7 +33,7 @@ public class AiAnalysisService {
 
         return chatClient.prompt()
         .user(u -> u.text(prompt)
-                    .param("resume", myResume)
+                    .param("resume", userResume)
                     .param("job", jobDescription))
         .call()
         .entity(AiAnalysisResponse.class); // mappage automatique de la réponse JSON à notre DTO AiAnalysisResponse

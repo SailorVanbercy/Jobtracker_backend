@@ -15,5 +15,7 @@ public record JobApplicationRequest(
     
     @Min (value = 0, message = "Resume match score must be a positive integer")
     @Max (value = 100, message = "Resume match score must be less than or equal to 100")
-    Integer resumeMatchScore
+    Integer resumeMatchScore,
+
+    String jobDescription
 ) {}

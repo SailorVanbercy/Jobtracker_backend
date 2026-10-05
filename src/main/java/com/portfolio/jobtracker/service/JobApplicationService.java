@@ -5,19 +5,26 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.portfolio.jobtracker.dto.AiAnalysisResponse;
 import com.portfolio.jobtracker.dto.JobApplicationRequest;
 import com.portfolio.jobtracker.dto.JobApplicationResponse;
 import com.portfolio.jobtracker.entity.JobApplication;
+import com.portfolio.jobtracker.entity.Users;
 import com.portfolio.jobtracker.exception.RessourceNotFoundException;
 import com.portfolio.jobtracker.repository.JobApplicationRepository;
+import com.portfolio.jobtracker.repository.UserRepository;
 
 @Service 
 public class JobApplicationService {
     private final JobApplicationRepository jobApplicationRepository;
+    private final AiAnalysisService aiAnalysisService;
+    private final UserRepository userRepository;
 
     // Injection de dépendance via le constructeur
-    public JobApplicationService(JobApplicationRepository jobApplicationRepository) {
+    public JobApplicationService(JobApplicationRepository jobApplicationRepository, AiAnalysisService aiAnalysisService, UserRepository userRepository) {
         this.jobApplicationRepository = jobApplicationRepository;
+        this.aiAnalysisService = aiAnalysisService;
+        this.userRepository = userRepository;
     }
 
     public List<JobApplicationResponse> getAllApplications() {
@@ -34,7 +41,14 @@ public class JobApplicationService {
         entity.setCompanyName(request.companyName());
         entity.setJobTitle(request.jobTitle());
         entity.setStatus(request.status() != null ? request.status() : "Applied");
-        entity.setResumeMatchScore(request.resumeMatchScore());
+        if(request.jobDescription() != null && !request.jobDescription().isBlank()) {
+            Users user = userRepository.findAll().stream().findFirst().orElseThrow(() -> new RessourceNotFoundException("Aucun utilisateur trouvé. Veuillez créer un profil et uploader un CV"));
+            AiAnalysisResponse aiResult = aiAnalysisService.analyseJobDescription(request.jobDescription(), user.getResumeText());
+            entity.setResumeMatchScore(aiResult.score());
+            entity.setMissingSkills(aiResult.missingSkills());
+        } else {
+            entity.setResumeMatchScore(request.resumeMatchScore());
+        }
 
         JobApplication savedEntity = jobApplicationRepository.save(entity);
         return JobApplicationResponse.fromEntity(savedEntity);
