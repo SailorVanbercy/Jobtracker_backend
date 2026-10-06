@@ -3,9 +3,9 @@ package com.portfolio.jobtracker.controller;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -15,13 +15,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.portfolio.jobtracker.dto.JobApplicationRequest;
 import com.portfolio.jobtracker.dto.JobApplicationResponse;
+import com.portfolio.jobtracker.dto.StatusUpdateRequest;
 import com.portfolio.jobtracker.service.JobApplicationService;
 
 import jakarta.validation.Valid;
 
 @RestController 
 @RequestMapping ("/api/applications")
-@CrossOrigin (origins = "*")
 public class JobApplicationController {
     private final JobApplicationService service;
 
@@ -54,6 +54,12 @@ public class JobApplicationController {
     @PutMapping ("/{id}")
     public JobApplicationResponse updateApplication(@PathVariable UUID id, @Valid @RequestBody JobApplicationRequest request){
         return service.updateApplication(id, request);
+    }
+
+    // EndPoint pour modifier le statut
+    @PatchMapping ("{id}/status")
+    public JobApplicationResponse updateStatus(@PathVariable UUID id, @Valid @RequestBody StatusUpdateRequest request){
+        return service.updateStatus(id, request.status());
     }
 
     // Endpoint pour supprimer une candidature par son ID

@@ -3,6 +3,8 @@ package com.portfolio.jobtracker.service;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.portfolio.jobtracker.dto.AiAnalysisResponse;
@@ -27,23 +29,26 @@ public class JobApplicationService {
         this.userRepository = userRepository;
     }
 
+    // Only the applications owned by the authenticated user
     public List<JobApplicationResponse> getAllApplications() {
-        return jobApplicationRepository.findAll()
+        return jobApplicationRepository.findAllByUser(getCurrentUser())
         .stream()
         .map(JobApplicationResponse::fromEntity)
         .toList();
     }
 
     public JobApplicationResponse createApplication(JobApplicationRequest request){
+        Users currentUser = getCurrentUser();
         JobApplication entity = new JobApplication();
 
         // Transformation du DTO en entité
+        entity.setUser(currentUser);
         entity.setCompanyName(request.companyName());
         entity.setJobTitle(request.jobTitle());
-        entity.setStatus(request.status() != null ? request.status() : "Applied");
+        entity.setStatus(request.status() != null ? request.status() : "APPLIED");
+        entity.setJobDescription(request.jobDescription());
         if(request.jobDescription() != null && !request.jobDescription().isBlank()) {
-            Users user = userRepository.findAll().stream().findFirst().orElseThrow(() -> new RessourceNotFoundException("Aucun utilisateur trouvé. Veuillez créer un profil et uploader un CV"));
-            AiAnalysisResponse aiResult = aiAnalysisService.analyseJobDescription(request.jobDescription(), user.getResumeText());
+            AiAnalysisResponse aiResult = aiAnalysisService.analyseJobDescription(request.jobDescription(), currentUser.getResumeText());
             entity.setResumeMatchScore(aiResult.score());
             entity.setMissingSkills(aiResult.missingSkills());
         } else {
@@ -54,17 +59,20 @@ public class JobApplicationService {
         return JobApplicationResponse.fromEntity(savedEntity);
     }
 
+    // Méthode de modification du statut
+    public JobApplicationResponse updateStatus(UUID id, String status){
+        JobApplication entity = findOwnedApplication(id);
+        entity.setStatus(status);
+        return JobApplicationResponse.fromEntity(jobApplicationRepository.save(entity));
+    }
+
     // Méthode pour récupérer une candidature par son ID
     public JobApplicationResponse getApplicationById(UUID id){
-        JobApplication entity = jobApplicationRepository.findById(id)
-        .orElseThrow(() ->new RessourceNotFoundException("Application not found with id: " + id));
-        return JobApplicationResponse.fromEntity(entity);
+        return JobApplicationResponse.fromEntity(findOwnedApplication(id));
     }
 
     public JobApplicationResponse updateApplication(UUID id, JobApplicationRequest request){
-        JobApplication entity = jobApplicationRepository.findById(id).orElseThrow(
-            () -> new RessourceNotFoundException("Application not found with id: " + id)
-        );
+        JobApplication entity = findOwnedApplication(id);
 
         // Mise à jour des champs de l'entité avec les valeurs du DTO
         entity.setCompanyName(request.companyName());
@@ -84,8 +92,19 @@ public class JobApplicationService {
 
     // Méthode pour supprimer une candidature par son ID
     public void deleteApplication(UUID id){
-        if(!jobApplicationRepository.existsById(id))
-            throw new RessourceNotFoundException("Application not found with id: " + id);
-        jobApplicationRepository.deleteById(id);
+        jobApplicationRepository.delete(findOwnedApplication(id));
+    }
+
+    // Another user's application is reported as not found to avoid leaking its existence
+    private JobApplication findOwnedApplication(UUID id){
+        return jobApplicationRepository.findByIdAndUser(id, getCurrentUser())
+            .orElseThrow(() -> new RessourceNotFoundException("Application not found with id: " + id));
+    }
+
+    private Users getCurrentUser(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserEmail = authentication.getName();
+        return userRepository.findByEmail(currentUserEmail)
+            .orElseThrow(() -> new RessourceNotFoundException("Aucun utilisateur trouvé"));
     }
 }

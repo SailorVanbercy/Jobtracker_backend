@@ -1,5 +1,6 @@
 package com.portfolio.jobtracker.dto;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,7 +12,9 @@ public record JobApplicationResponse(
     String jobTitle,
     String status,
     Integer resumeMatchScore,
-    List<String> missingSkills
+    List<String> missingSkills,
+    Instant createdAt,
+    String jobDescription
 ) {
     // constructeur pour convertir une entité en dto
     public static JobApplicationResponse fromEntity(JobApplication jobApplication) {
@@ -21,7 +24,9 @@ public record JobApplicationResponse(
             jobApplication.getJobTitle(),
             jobApplication.getStatus(),
             jobApplication.getResumeMatchScore(),
-            jobApplication.getMissingSkills()
+            jobApplication.getMissingSkills(),
+            jobApplication.getCreatedAt(),
+            jobApplication.getJobDescription()
         );
     }
 }
